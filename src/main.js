@@ -5,6 +5,7 @@ import User from "./models/userModel.js";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 import { comparePassword, hashPassword } from "./utils/authUtil.js";
+import { authMiddleware } from "./middlewares/authMiddleware.js";
 
 const app = express();
 const PORT = 8000;
@@ -33,7 +34,7 @@ app.post("/todo", async (req, res) => {
   }
 });
 
-app.get("/todos", async (req, res) => {
+app.get("/todos", authMiddleware, async (req, res) => {
   const todos = await Todo.findAll();
   res.json(todos);
 });
@@ -81,8 +82,6 @@ app.post("/signup", async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   const email = req.body.email;
-
-  console.log(password);
 
   //hash password before storing
   const hashedPassword = await hashPassword(password);
