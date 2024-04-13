@@ -6,8 +6,4 @@ const Todo = sequelize.define("todo", {
   task_status: DataTypes.ENUM("todo", "doing", "done"),
 });
 
-console.log("Hi");
-
-console.log("Hello");
-
 export default Todo;
