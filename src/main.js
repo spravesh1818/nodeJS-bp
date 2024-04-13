@@ -4,6 +4,7 @@ import Todo from "./models/todoModel.js";
 import User from "./models/userModel.js";
 import jwt from "jsonwebtoken";
 import cors from "cors";
+import { comparePassword, hashPassword } from "./utils/authUtil.js";
 
 const app = express();
 const PORT = 8000;
@@ -81,8 +82,16 @@ app.post("/signup", async (req, res) => {
   const password = req.body.password;
   const email = req.body.email;
 
+  console.log(password);
+
+  //hash password before storing
+  const hashedPassword = await hashPassword(password);
   try {
-    const user = await User.create({ username, password, email });
+    const user = await User.create({
+      username: username,
+      password: hashedPassword,
+      email: email,
+    });
     if (user) {
       res.json({ msg: "User created successfully" });
     }
@@ -102,18 +111,20 @@ app.post("/signin", async (req, res) => {
       res.json({ msg: "User does not exist in our system" }).status(404);
     }
 
-    if (user.dataValues.password !== password) {
-      res.json({ msg: "Password does not match" }).status(400);
+    const checkPasswords = await comparePassword(password, user.password);
+
+    if (!checkPasswords) {
+      return res.json({ msg: "Password does not match" });
     }
 
     // Generate json webtoken and send the access token
     const accessToken = jwt.sign({ username: username }, "secretKey", {
       expiresIn: "30d",
     });
-    res.json({ access_token: accessToken });
+    return res.json({ access_token: accessToken });
   } catch (e) {
     console.log(e);
-    res.json({ msg: "Something went wrong.User creation failed" });
+    return res.json({ msg: "Something went wrong.User signin failed" });
   }
 });
 
