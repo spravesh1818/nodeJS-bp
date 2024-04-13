@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import cors from "cors";
 import { comparePassword, hashPassword } from "./utils/authUtil.js";
 import { authMiddleware } from "./middlewares/authMiddleware.js";
+import { todoSchema } from "./validationSchema/todoSchema.js";
 
 const app = express();
 const PORT = 8000;
@@ -21,6 +22,15 @@ app.post("/todo", async (req, res) => {
   try {
     const name = req.body.name;
     const status = req.body.status;
+
+    const { error, value } = todoSchema.validate({
+      name: name,
+      status: status,
+    });
+
+    if (error) {
+      return res.json({ msg: error.details });
+    }
 
     const todo = await Todo.create({
       name: name,
